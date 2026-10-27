@@ -18,3 +18,4 @@ data/processed/*
 *.duckdb
 frontend/node_modules/
 frontend/dist/
+output/

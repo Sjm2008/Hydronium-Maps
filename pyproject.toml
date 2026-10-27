@@ -12,6 +12,7 @@ dependencies = [
     "networkx>=3.2",
     "numpy>=1.26",
     "pandas>=2.1",
+    "folium>=0.16",
 ]
 
 [project.optional-dependencies]
