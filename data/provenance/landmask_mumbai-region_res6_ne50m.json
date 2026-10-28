@@ -47,5 +47,5 @@
   "source_url": "https://naciscdn.org/naturalearth/50m/physical/ne_50m_land.zip",
   "temporal_coverage": "Static (no observation time)",
   "units": "land_fraction: 0-1 area share; nearest_land_km: kilometres",
-  "version": "oceangrid@2b8a48d / source 4.1.0"
+  "version": "oceangrid@f898b43 / source 4.1.0"
 }

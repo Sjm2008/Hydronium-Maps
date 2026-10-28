@@ -99,7 +99,7 @@ def build_map(
     max_cells: int = DEFAULT_MAX_CELLS,
     ports: tuple[SamplePort, ...] | list[SamplePort] = SAMPLE_PORTS,
     generated_at: str | None = None,
-    tiles: str | None = "OpenStreetMap",
+    tiles: str | None = None,  # no third-party tiles by default: OSM blocks unidentified apps; land comes from Natural Earth
     landmask: pd.DataFrame | None = None,
     land_geojson: dict | None = None,
     mask_note: str | None = None,

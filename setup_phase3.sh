@@ -1346,6 +1346,13 @@ def test_real_ports_change_the_banner_and_layer_name():
 def test_sample_ports_banner_unchanged():
     html = build_map(get_region("mumbai-region"), 5).get_root().render()
     assert "ILLUSTRATIVE" in html and "not yet classified" in html
+
+
+def test_default_map_requests_no_third_party_tiles():
+    """OSM blocks apps that break its tile policy, so the default must not call any tile server."""
+    html = build_map(get_region("mumbai-region"), 5).get_root().render()
+    assert "tile.openstreetmap" not in html and "tile_layer" not in html
+    assert "tile.openstreetmap" in build_map(get_region("mumbai-region"), 5, tiles="OpenStreetMap").get_root().render()
 OCEANGRID_P3_13
 write_file docs/landmask_methodology.md <<'OCEANGRID_P3_14'
 # Land/water classification methodology (Phase 3)
@@ -1664,7 +1671,7 @@ def build_map(
     max_cells: int = DEFAULT_MAX_CELLS,
     ports: tuple[SamplePort, ...] | list[SamplePort] = SAMPLE_PORTS,
     generated_at: str | None = None,
-    tiles: str | None = "OpenStreetMap",
+    tiles: str | None = None,  # no third-party tiles by default: OSM blocks unidentified apps; land comes from Natural Earth
     landmask: pd.DataFrame | None = None,
     land_geojson: dict | None = None,
     mask_note: str | None = None,
@@ -1781,8 +1788,9 @@ def main() -> int:
                     help=f"H3 resolution (regions {MIN_RES}-{MAX_RES}; world 0-{MAX_RES}). Default: 2 for world, 4 otherwise")
     ap.add_argument("--max-cells", type=int, default=DEFAULT_MAX_CELLS)
     ap.add_argument("--out", type=Path, help="output HTML path")
-    ap.add_argument("--tiles", default="OpenStreetMap",
-                    help='basemap: "OpenStreetMap", "CartoDB positron", or "none" (no basemap, works offline)')
+    ap.add_argument("--tiles", default="none",
+                    help='basemap: "none" (default; works offline, use --land-layer for geography) or "OpenStreetMap" '
+                         '(NOT recommended: OSM blocks apps that do not meet its tile usage policy)')
     ap.add_argument("--scale", default="50m", choices=("10m", "50m", "110m"), help="Natural Earth scale for --landmask/--land-layer")
     ap.add_argument("--landmask", action="store_true",
                     help="colour cells by land/water class (run scripts/process_coastlines.py first)")

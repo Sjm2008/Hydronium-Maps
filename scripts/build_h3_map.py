@@ -33,8 +33,9 @@ def main() -> int:
                     help=f"H3 resolution (regions {MIN_RES}-{MAX_RES}; world 0-{MAX_RES}). Default: 2 for world, 4 otherwise")
     ap.add_argument("--max-cells", type=int, default=DEFAULT_MAX_CELLS)
     ap.add_argument("--out", type=Path, help="output HTML path")
-    ap.add_argument("--tiles", default="OpenStreetMap",
-                    help='basemap: "OpenStreetMap", "CartoDB positron", or "none" (no basemap, works offline)')
+    ap.add_argument("--tiles", default="none",
+                    help='basemap: "none" (default; works offline, use --land-layer for geography) or "OpenStreetMap" '
+                         '(NOT recommended: OSM blocks apps that do not meet its tile usage policy)')
     ap.add_argument("--scale", default="50m", choices=("10m", "50m", "110m"), help="Natural Earth scale for --landmask/--land-layer")
     ap.add_argument("--landmask", action="store_true",
                     help="colour cells by land/water class (run scripts/process_coastlines.py first)")
