@@ -13,6 +13,11 @@ dependencies = [
     "numpy>=1.26",
     "pandas>=2.1",
     "folium>=0.16",
+    "geopandas>=1.0",
+    "shapely>=2.0",
+    "pyproj>=3.6",
+    "pyogrio>=0.7",
+    "pyarrow>=14",
 ]
 
 [project.optional-dependencies]

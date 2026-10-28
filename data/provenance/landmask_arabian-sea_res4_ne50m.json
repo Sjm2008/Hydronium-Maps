@@ -1,0 +1,51 @@
+{
+  "access_restrictions": "None",
+  "crs": "H3 cells; land fraction computed in EPSG:6933 (equal-area)",
+  "dataset_id": "landmask_arabian-sea_res4_ne50m",
+  "geographic_coverage": "arabian-sea: S5.0 W50.0 N27.0 E80.0",
+  "inputs": [
+    "natural_earth_land_50m@0b8e670cf80d"
+  ],
+  "is_synthetic": false,
+  "known_limitations": [
+    "Coastal buffer (10.0 km) is an ASSUMPTION, not a published accuracy of the source coastline.",
+    "Generalised source: small islands, reefs, drying banks and structures may be missing.",
+    "Inland seas/lakes (e.g. the Caspian) can appear as open_water without connecting to the ocean; Phase 4 must enforce connectivity.",
+    "Distances use a local equirectangular approximation and ignore land across the antimeridian.",
+    "Classes describe the data, not safe passage. Not for navigation."
+  ],
+  "licence": "Derived from public-domain Natural Earth data; OceanGrid-derived classification",
+  "licence_verified": true,
+  "local_path": "data/processed/landmask_arabian-sea_res4_ne50m.parquet",
+  "parameters": {
+    "coastal_buffer_km": 10.0,
+    "land_min_fraction": 0.999,
+    "resolution": 4,
+    "scale": "50m",
+    "tile_deg": 5.0,
+    "water_max_fraction": 1e-06
+  },
+  "processing_steps": [
+    "Tiled land polygons into 5.0 degree pieces",
+    "Intersected antimeridian-safe H3 cell polygons with land in EPSG:6933; land_fraction = land area / cell area",
+    "land >= 0.999; mixed if > 1e-06; else water",
+    "Water cells within 10.0 km of land flagged coastal_water_buffer (local equirectangular distance)",
+    "Pole cells left unclassified (polar_excluded)"
+  ],
+  "quality_flags": [
+    "cell_count=5212",
+    "open_water=3398",
+    "coastal_water_buffer=78",
+    "coastal_mixed=295",
+    "land=1441",
+    "polar_excluded=0"
+  ],
+  "retrieved_at": "2026-10-28T06:46:01Z",
+  "sha256": "90ff5df2d65a04bb0e988873fd572b2233aeef9dcee23218a03cf5e384452456",
+  "size_bytes": 144027,
+  "source_name": "OceanGrid land/water classification derived from Natural Earth 50m land",
+  "source_url": "https://naciscdn.org/naturalearth/50m/physical/ne_50m_land.zip",
+  "temporal_coverage": "Static (no observation time)",
+  "units": "land_fraction: 0-1 area share; nearest_land_km: kilometres",
+  "version": "oceangrid@2b8a48d / source 4.1.0"
+}

@@ -19,3 +19,4 @@ data/processed/*
 frontend/node_modules/
 frontend/dist/
 output/
+*.phase2.bak

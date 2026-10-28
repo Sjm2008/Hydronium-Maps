@@ -14,7 +14,12 @@ import argparse
 import sys
 from pathlib import Path
 
+import pandas as pd
+
 from oceangrid.spatial.cells import DEFAULT_MAX_CELLS, MAX_RES, MIN_RES, CellLimitError, estimate_cell_count
+from oceangrid.ingestion.natural_earth import find_local_land
+from oceangrid.ingestion.provenance import read_record
+from oceangrid.spatial.landmask import land_to_geojson
 from oceangrid.spatial.map_builder import build_map, save_map
 from oceangrid.spatial.region import PRESETS, BBox, get_region
 
@@ -28,6 +33,14 @@ def main() -> int:
                     help=f"H3 resolution (regions {MIN_RES}-{MAX_RES}; world 0-{MAX_RES}). Default: 2 for world, 4 otherwise")
     ap.add_argument("--max-cells", type=int, default=DEFAULT_MAX_CELLS)
     ap.add_argument("--out", type=Path, help="output HTML path")
+    ap.add_argument("--tiles", default="OpenStreetMap",
+                    help='basemap: "OpenStreetMap", "CartoDB positron", or "none" (no basemap, works offline)')
+    ap.add_argument("--scale", default="50m", choices=("10m", "50m", "110m"), help="Natural Earth scale for --landmask/--land-layer")
+    ap.add_argument("--landmask", action="store_true",
+                    help="colour cells by land/water class (run scripts/process_coastlines.py first)")
+    ap.add_argument("--land-layer", action="store_true", help="draw Natural Earth land polygons (works with --tiles none)")
+    ap.add_argument("--ports", choices=("sample", "wpi"), default="sample",
+                    help="sample = illustrative ports; wpi = data/processed/ports_wpi.parquet (see scripts/import_ports.py)")
     ap.add_argument("--estimate", action="store_true", help="print estimated cell counts and exit")
     args = ap.parse_args()
 
@@ -42,9 +55,41 @@ def main() -> int:
             print(f"  res {r}: ~{estimate_cell_count(bbox, r):,}")
         return 0
 
-    out = args.out or Path("output/maps") / f"oceangrid_h3_{bbox.name}_res{args.res}.html"
+    suffix = ("_landmask" if args.landmask else "") + ("_wpi" if args.ports == "wpi" else "")
+    out = args.out or Path("output/maps") / f"oceangrid_h3_{bbox.name}_res{args.res}{suffix}.html"
+
+    kwargs = {}
+    if args.landmask:
+        name = f"landmask_{bbox.name}_res{args.res}_ne{args.scale}"
+        mpath, ppath = Path("data/processed") / f"{name}.parquet", Path("data/provenance") / f"{name}.json"
+        if not mpath.exists():
+            print(f"ERROR: {mpath} not found. Run: python scripts/process_coastlines.py "
+                  f"--region {bbox.name} --res {args.res} --scale {args.scale}", file=sys.stderr)
+            return 2
+        kwargs["landmask"] = pd.read_parquet(mpath)
+        if ppath.exists():
+            r = read_record(ppath)
+            kwargs["mask_note"] = f"Natural Earth {args.scale} land, buffer {r.parameters.get('coastal_buffer_km')} km (assumption), retrieved {r.retrieved_at[:10]}"
+        else:
+            kwargs["mask_note"] = f"Natural Earth {args.scale} land (provenance record missing)"
+    if args.land_layer:
+        land = find_local_land(args.scale, "data/raw")
+        if land is None:
+            print(f"ERROR: no land file. Run: python scripts/download_sources.py --scale {args.scale}", file=sys.stderr)
+            return 2
+        kwargs["land_geojson"] = land_to_geojson(land, bbox)
+    if args.ports == "wpi":
+        import geopandas as gpd
+        from oceangrid.ingestion.ports_wpi import to_port_markers
+        pp = Path("data/processed/ports_wpi.parquet")
+        if not pp.exists():
+            print("ERROR: no imported ports. See scripts/import_ports.py (manual NGA download required).", file=sys.stderr)
+            return 2
+        kwargs["ports"] = to_port_markers(gpd.read_parquet(pp), bbox)
+
     try:
-        m = build_map(bbox, args.res, max_cells=args.max_cells)
+        m = build_map(bbox, args.res, max_cells=args.max_cells,
+                      tiles=None if args.tiles.lower() == "none" else args.tiles, **kwargs)
     except (CellLimitError, ValueError) as e:
         print(f"ERROR: {e}", file=sys.stderr)
         return 2

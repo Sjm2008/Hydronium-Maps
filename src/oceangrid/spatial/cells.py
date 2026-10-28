@@ -115,9 +115,14 @@ def cell_features_wrapped(cell: str, **extra_properties) -> list[dict]:
     return [_feature(east, base["properties"]), _feature(west, dict(base["properties"]))]
 
 
-def cells_to_feature_collection(cells: list[str], skip: set[str] | frozenset[str] = frozenset()) -> dict:
+def cells_to_feature_collection(
+    cells: list[str],
+    skip: set[str] | frozenset[str] = frozenset(),
+    extra: dict[str, dict] | None = None,
+) -> dict:
+    """GeoJSON FeatureCollection; `extra` maps h3_index -> additional properties."""
     feats: list[dict] = []
     for c in cells:
         if c not in skip:
-            feats.extend(cell_features_wrapped(c))
+            feats.extend(cell_features_wrapped(c, **(extra.get(c, {}) if extra else {})))
     return {"type": "FeatureCollection", "features": feats}
